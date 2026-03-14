@@ -15,21 +15,45 @@
         .rank-silver { background: linear-gradient(135deg, #94a3b8 0%, #64748b 100%); }
         .rank-bronze { background: linear-gradient(135deg, #d97706 0%, #92400e 100%); }
         .card-shadow { box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05); }
+        
+        /* Animasi progress bar untuk indikator refresh */
+        .refresh-progress {
+            height: 3px;
+            background: #3b82f6;
+            width: 0%;
+            transition: width 1s linear;
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 9999;
+        }
     </style>
 </head>
 <body class="p-4 md:p-8">
+    <!-- Indikator Auto-Refresh -->
+    <div id="refreshProgress" class="refresh-progress"></div>
+
     <div class="max-w-7xl mx-auto">
         <!-- Header -->
         <header class="mb-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
             <div class="text-left">
                 <div class="inline-block p-2 px-4 rounded-full bg-blue-100 text-blue-700 text-[10px] font-bold uppercase tracking-widest mb-3">
-                    Multi-Month Reporting System
+                    Real-time Auto-Sync System
                 </div>
                 <h1 class="text-3xl md:text-4xl font-black text-slate-900 tracking-tight">🏆 Dashboard Penjualan</h1>
-                
+                <p class="text-slate-500 text-sm mt-1">Data diperbarui otomatis setiap 30 detik.</p>
             </div>
             
             <div class="flex flex-wrap items-center gap-3">
+                <!-- Status Sinkronisasi -->
+                <div id="syncStatus" class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mr-2 flex items-center">
+                    <span class="relative flex h-2 w-2 mr-2">
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                    </span>
+                    Tersinkronisasi
+                </div>
+
                 <!-- Month Selector -->
                 <div id="monthSelectorContainer" class="hidden">
                     <select id="monthSelector" onchange="updateDashboard()" class="bg-white border border-slate-200 text-slate-700 text-sm font-bold rounded-xl focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 shadow-sm">
@@ -70,7 +94,7 @@
             <div class="lg:col-span-1 bg-white rounded-3xl shadow-xl border border-slate-200 overflow-hidden">
                 <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/30">
                     <h2 class="text-sm font-black text-slate-800 uppercase tracking-widest">Peringkat <span class="view-label">...</span></h2>
-                    <button onclick="init()" class="text-slate-400 hover:text-blue-600 transition-colors">
+                    <button onclick="fetchData()" class="text-slate-400 hover:text-blue-600 transition-colors">
                         <i class="fas fa-sync-alt" id="refreshIcon"></i>
                     </button>
                 </div>
@@ -105,10 +129,14 @@
         let currentView = 'month';
         let rawData = [];
         let mainChart = null;
+        let refreshInterval = 30; // Detik
+        let secondsPassed = 0;
 
         // Initialize month dropdown
         function setupMonthSelector() {
             const selector = document.getElementById('monthSelector');
+            if (selector.options.length > 0) return; // Hindari duplikasi saat auto-refresh
+
             const now = new Date();
             const currentMonthIdx = now.getMonth();
 
@@ -122,21 +150,45 @@
         }
 
         async function init() {
+            setupMonthSelector();
+            await fetchData();
+            startAutoRefresh();
+        }
+
+        async function fetchData() {
             const icon = document.getElementById('refreshIcon');
             if (icon) icon.classList.add('fa-spin');
             
-            setupMonthSelector();
-
             try {
-                const response = await fetch(SHEET_URL);
+                // Tambahkan parameter cache-buster agar data benar-benar baru
+                const response = await fetch(`${SHEET_URL}&cb=${new Date().getTime()}`);
                 const csv = await response.text();
                 rawData = parseCSV(csv);
                 updateDashboard();
+                secondsPassed = 0; // Reset timer setelah berhasil fetch
+                updateProgressBar();
             } catch (e) {
-                console.error(e);
+                console.error("Fetch error:", e);
             } finally {
                 if (icon) setTimeout(() => icon.classList.remove('fa-spin'), 800);
             }
+        }
+
+        function startAutoRefresh() {
+            setInterval(() => {
+                secondsPassed++;
+                updateProgressBar();
+                
+                if (secondsPassed >= refreshInterval) {
+                    fetchData();
+                }
+            }, 1000);
+        }
+
+        function updateProgressBar() {
+            const bar = document.getElementById('refreshProgress');
+            const percentage = (secondsPassed / refreshInterval) * 100;
+            bar.style.width = `${percentage}%`;
         }
 
         function parseCSV(csv) {
@@ -144,7 +196,6 @@
             return lines.slice(1).filter(l => l.trim()).map(line => {
                 const cols = line.split(/,(?=(?:[^"]*"[^"]*")*[^"]*$)/).map(c => c.replace(/"/g, '').trim());
                 
-                // Mapping: B=0, C=1...N=12, O=13
                 const monthlyData = cols.slice(1, 13).map(v => parseFloat(v.replace(/[^0-9.-]+/g, "")) || 0);
                 const totalYearly = parseFloat(cols[13]?.replace(/[^0-9.-]+/g, "") || 0);
 
@@ -243,6 +294,9 @@
                     indexAxis: 'y',
                     responsive: true,
                     maintainAspectRatio: false,
+                    animation: {
+                        duration: 500 // Animasi lebih cepat agar terasa responsif saat auto-update
+                    },
                     plugins: { 
                         legend: { display: false },
                         tooltip: { backgroundColor: '#1e293b', padding: 12 }
@@ -255,7 +309,6 @@
             });
         }
 
-        // Run switchView on load to show current month by default
         window.onload = () => {
             init().then(() => switchView('month'));
         };
