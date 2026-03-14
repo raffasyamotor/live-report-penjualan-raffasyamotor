@@ -27,6 +27,17 @@
             left: 0;
             z-index: 9999;
         }
+
+        .crown-icon {
+            color: #fbbf24;
+            filter: drop-shadow(0 0 2px rgba(245, 158, 11, 0.5));
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-3px); }
+        }
     </style>
 </head>
 <body class="p-4 md:p-8">
@@ -77,7 +88,7 @@
             </div>
             <div class="glass p-6 rounded-3xl card-shadow border border-white">
                 <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Top Sales</p>
-                <h3 id="statTop" class="text-2xl font-black text-blue-600 truncate">-</h3>
+                <h3 id="statTop" class="text-2xl font-black text-blue-600 truncate flex items-center gap-2">-</h3>
             </div>
             <div class="glass p-6 rounded-3xl card-shadow border border-white">
                 <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Pencapaian Tertinggi</p>
@@ -246,7 +257,12 @@
             displayData.forEach((d, i) => {
                 totalUnit += d.value;
                 let badge = "bg-slate-100 text-slate-500";
-                if(i===0 && d.value > 0) badge = "rank-gold text-white shadow-sm";
+                let crown = "";
+                
+                if(i===0 && d.value > 0) {
+                    badge = "rank-gold text-white shadow-sm";
+                    crown = '<i class="fas fa-crown crown-icon ml-2"></i>';
+                }
                 else if(i===1 && d.value > 0) badge = "rank-silver text-white shadow-sm";
                 else if(i===2 && d.value > 0) badge = "rank-bronze text-white shadow-sm";
 
@@ -255,14 +271,24 @@
                         <td class="px-6 py-4 w-16">
                             <span class="w-7 h-7 flex items-center justify-center rounded-lg text-[10px] font-black ${badge}">${i+1}</span>
                         </td>
-                        <td class="py-4 font-bold text-slate-700">${d.name}</td>
+                        <td class="py-4 font-bold text-slate-700 flex items-center">
+                            ${d.name} ${crown}
+                        </td>
                         <td class="px-6 py-4 text-right font-mono font-black text-slate-900">${d.value.toLocaleString()}</td>
                     </tr>
                 `;
             });
 
+            // Update Stats dengan Mahkota
+            const topSalesName = displayData[0]?.value > 0 ? displayData[0].name : "-";
+            const topSalesContainer = document.getElementById('statTop');
+            if (displayData[0]?.value > 0) {
+                topSalesContainer.innerHTML = `${topSalesName} <i class="fas fa-crown crown-icon text-xl"></i>`;
+            } else {
+                topSalesContainer.innerText = "-";
+            }
+
             document.getElementById('statTotal').innerText = totalUnit.toLocaleString();
-            document.getElementById('statTop').innerText = displayData[0]?.value > 0 ? displayData[0].name : "-";
             document.getElementById('statHighest').innerText = (displayData[0]?.value || 0).toLocaleString();
             
             const activeSales = displayData.filter(x => x.value > 0).length || 1;
