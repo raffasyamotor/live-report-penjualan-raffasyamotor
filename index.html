@@ -48,20 +48,17 @@
             50% { transform: translateY(-4px) scale(1.1); }
         }
 
-        /* Responsive Table adjustments */
         @media (max-width: 640px) {
             .table-container { max-height: 400px; }
-            .stat-card-title { font-size: 0.7rem; }
-            .stat-card-value { font-size: 1.5rem; }
         }
     </style>
 </head>
 <body class="antialiased">
-    <!-- Progress Bar -->
+    <!-- Indikator Refresh -->
     <div id="refreshProgress" class="refresh-progress"></div>
 
     <div class="min-h-screen pb-12">
-        <!-- Top Navigation / Header -->
+        <!-- Header Navigasi -->
         <nav class="sticky top-0 z-40 w-full bg-white/80 backdrop-blur-md border-b border-slate-200 mb-6 md:mb-10">
             <div class="max-w-7xl mx-auto px-4 h-16 md:h-20 flex items-center justify-between">
                 <div class="flex items-center gap-3">
@@ -74,23 +71,19 @@
                     </div>
                 </div>
 
-                <!-- Desktop Controls -->
+                <!-- Kontrol Desktop -->
                 <div class="hidden md:flex items-center gap-4">
                     <div class="flex items-center gap-2 bg-slate-100 p-1 rounded-2xl border border-slate-200">
                         <button id="btnMonthD" onclick="switchView('month')" class="px-5 py-2 rounded-xl text-xs font-bold transition-all bg-white shadow-sm text-blue-600">Bulanan</button>
                         <button id="btnYearD" onclick="switchView('year')" class="px-5 py-2 rounded-xl text-xs font-bold transition-all text-slate-500 hover:bg-white/50">Tahunan</button>
                     </div>
                     
-                    <select id="yearSelector" onchange="updateDashboard()" class="bg-white border border-slate-200 text-slate-700 text-xs font-bold rounded-xl p-2.5 focus:ring-2 focus:ring-blue-500 outline-none">
-                        <!-- Filled by JS -->
-                    </select>
-
                     <select id="monthSelector" onchange="updateDashboard()" class="bg-white border border-slate-200 text-slate-700 text-xs font-bold rounded-xl p-2.5 focus:ring-2 focus:ring-blue-500 outline-none">
-                        <!-- Filled by JS -->
+                        <!-- Pilihan Bulan oleh JS -->
                     </select>
                 </div>
 
-                <!-- Mobile Controls Trigger (Refresh only for simple UI) -->
+                <!-- Tombol Refresh Mobile -->
                 <button onclick="fetchData()" class="md:hidden text-slate-400 p-2">
                     <i class="fas fa-sync-alt" id="refreshIconMobile"></i>
                 </button>
@@ -98,98 +91,86 @@
         </nav>
 
         <main class="max-w-7xl mx-auto px-4">
-            <!-- Mobile Selectors (Visible only on small screens) -->
+            <!-- Kontrol Mobile -->
             <div class="md:hidden flex flex-col gap-3 mb-6">
-                <div class="grid grid-cols-2 gap-2">
-                    <select id="yearSelectorM" onchange="syncSelectors(this, 'yearSelector')" class="bg-white border border-slate-200 text-slate-700 text-sm font-bold rounded-2xl p-3 shadow-sm outline-none">
-                    </select>
-                    <select id="monthSelectorM" onchange="syncSelectors(this, 'monthSelector')" class="bg-white border border-slate-200 text-slate-700 text-sm font-bold rounded-2xl p-3 shadow-sm outline-none">
-                    </select>
-                </div>
+                <select id="monthSelectorM" onchange="syncSelectors(this, 'monthSelector')" class="bg-white border border-slate-200 text-slate-700 text-sm font-bold rounded-2xl p-3 shadow-sm outline-none">
+                </select>
                 <div class="flex bg-slate-200/50 p-1 rounded-2xl">
                     <button id="btnMonthM" onclick="switchView('month')" class="flex-1 py-2.5 rounded-xl text-sm font-bold transition-all bg-white shadow-sm text-blue-600">Bulanan</button>
                     <button id="btnYearM" onclick="switchView('year')" class="flex-1 py-2.5 rounded-xl text-sm font-bold transition-all text-slate-500">Tahunan</button>
                 </div>
             </div>
 
-            <!-- Stats Overview - Grid Responsif -->
+            <!-- Kartu Statistik -->
             <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-8 md:mb-12">
-                <!-- Total Unit -->
                 <div class="bg-white p-5 md:p-6 rounded-[2rem] border border-slate-200 shadow-sm">
                     <div class="flex items-center gap-3 mb-4">
                         <div class="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center text-blue-500">
                             <i class="fas fa-shopping-cart text-xs"></i>
                         </div>
-                        <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest stat-card-title">Total Unit</span>
+                        <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total Unit</span>
                     </div>
-                    <h3 id="statTotal" class="text-2xl md:text-3xl font-black text-slate-800 stat-card-value">0</h3>
+                    <h3 id="statTotal" class="text-2xl md:text-3xl font-black text-slate-800">0</h3>
                     <p class="text-[10px] text-slate-400 mt-1 font-medium"><span class="view-label">...</span></p>
                 </div>
 
-                <!-- Top Sales -->
                 <div class="bg-white p-5 md:p-6 rounded-[2rem] border border-slate-200 shadow-sm">
                     <div class="flex items-center gap-3 mb-4">
                         <div class="w-8 h-8 rounded-full bg-amber-50 flex items-center justify-center text-amber-500">
                             <i class="fas fa-crown text-xs"></i>
                         </div>
-                        <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest stat-card-title">Top Sales</span>
+                        <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Top Sales</span>
                     </div>
                     <h3 id="statTop" class="text-lg md:text-xl font-black text-blue-600 truncate flex items-center gap-2">-</h3>
-                    <p class="text-[10px] text-slate-400 mt-1 font-medium italic">Highest Rank</p>
+                    <p class="text-[10px] text-slate-400 mt-1 font-medium italic">Leader</p>
                 </div>
 
-                <!-- Pencapaian Tertinggi -->
                 <div class="bg-white p-5 md:p-6 rounded-[2rem] border border-slate-200 shadow-sm">
                     <div class="flex items-center gap-3 mb-4">
                         <div class="w-8 h-8 rounded-full bg-green-50 flex items-center justify-center text-green-500">
                             <i class="fas fa-chart-line text-xs"></i>
                         </div>
-                        <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest stat-card-title">High Score</span>
+                        <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Skor Tertinggi</span>
                     </div>
-                    <h3 id="statHighest" class="text-2xl md:text-3xl font-black text-slate-800 stat-card-value">0</h3>
-                    <p class="text-[10px] text-slate-400 mt-1 font-medium">Record Performance</p>
+                    <h3 id="statHighest" class="text-2xl md:text-3xl font-black text-slate-800">0</h3>
+                    <p class="text-[10px] text-slate-400 mt-1 font-medium">Rekor Performa</p>
                 </div>
 
-                <!-- Rata-rata -->
                 <div class="bg-white p-5 md:p-6 rounded-[2rem] border border-slate-200 shadow-sm">
                     <div class="flex items-center gap-3 mb-4">
                         <div class="w-8 h-8 rounded-full bg-purple-50 flex items-center justify-center text-purple-500">
                             <i class="fas fa-users text-xs"></i>
                         </div>
-                        <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest stat-card-title">Average</span>
+                        <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Rata-rata</span>
                     </div>
-                    <h3 id="statAvg" class="text-2xl md:text-3xl font-black text-slate-800 stat-card-value">0</h3>
-                    <p class="text-[10px] text-slate-400 mt-1 font-medium">Per Person</p>
+                    <h3 id="statAvg" class="text-2xl md:text-3xl font-black text-slate-800">0</h3>
+                    <p class="text-[10px] text-slate-400 mt-1 font-medium">Per Orang</p>
                 </div>
             </div>
 
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-                <!-- Left: Leaderboard (Desktop: 5 cols, Mobile: full) -->
+                <!-- Tabel Leaderboard -->
                 <div class="lg:col-span-5 bg-white rounded-[2.5rem] shadow-xl shadow-slate-200/50 border border-slate-200 overflow-hidden">
                     <div class="px-8 py-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
                         <h2 class="text-xs font-black text-slate-800 uppercase tracking-[0.2em]">Peringkat <span class="view-label">...</span></h2>
-                        <span id="syncIndicator" class="text-[10px] font-bold text-green-500 flex items-center gap-1.5">
+                        <span class="text-[10px] font-bold text-green-500 flex items-center gap-1.5">
                             <span class="w-1.5 h-1.5 rounded-full bg-green-500"></span> Live
                         </span>
                     </div>
-                    <div class="overflow-y-auto max-h-[500px] md:max-h-[600px] table-container">
+                    <div class="overflow-y-auto max-h-[500px] md:max-h-[600px]">
                         <table class="w-full text-left">
                             <tbody id="leaderboardBody" class="divide-y divide-slate-50 text-sm">
-                                <!-- Data -->
+                                <!-- Baris Data -->
                             </tbody>
                         </table>
                     </div>
                 </div>
 
-                <!-- Right: Chart (Desktop: 7 cols, Mobile: full) -->
+                <!-- Grafik Visualisasi -->
                 <div class="lg:col-span-7 space-y-6">
                     <div class="bg-white p-6 md:p-10 rounded-[2.5rem] shadow-xl shadow-slate-200/50 border border-slate-200">
                         <div class="flex items-center justify-between mb-8">
                             <h2 class="text-xs font-black text-slate-800 uppercase tracking-[0.2em]">Visual Performa</h2>
-                            <div class="flex gap-1">
-                                <span class="w-2 h-2 rounded-full bg-blue-500"></span>
-                                <span class="w-2 h-2 rounded-full bg-slate-200"></span>
-                            </div>
                         </div>
                         <div class="relative h-[300px] md:h-[450px]">
                             <canvas id="mainChart"></canvas>
@@ -211,25 +192,10 @@
         let refreshInterval = 30;
         let secondsPassed = 0;
 
-        // Auto-detect current year and setup selectors for both Desktop & Mobile
         function setupSelectors() {
             const now = new Date();
-            const currentYear = now.getFullYear();
             const currentMonthIdx = now.getMonth();
-
-            const yearSelectors = [document.getElementById('yearSelector'), document.getElementById('yearSelectorM')];
             const monthSelectors = [document.getElementById('monthSelector'), document.getElementById('monthSelectorM')];
-            
-            yearSelectors.forEach(sel => {
-                if (!sel || sel.options.length > 0) return;
-                [currentYear - 1, currentYear, currentYear + 1].forEach(year => {
-                    const option = document.createElement('option');
-                    option.value = year;
-                    option.text = year;
-                    if (year === currentYear) option.selected = true;
-                    sel.appendChild(option);
-                });
-            });
 
             monthSelectors.forEach(sel => {
                 if (!sel || sel.options.length > 0) return;
@@ -243,7 +209,6 @@
             });
         }
 
-        // Helper to keep mobile and desktop selectors in sync
         function syncSelectors(source, targetId) {
             document.getElementById(targetId).value = source.value;
             updateDashboard();
@@ -256,9 +221,8 @@
         }
 
         async function fetchData() {
-            const iconD = document.getElementById('refreshIcon');
             const iconM = document.getElementById('refreshIconMobile');
-            [iconD, iconM].forEach(i => i && i.classList.add('fa-spin'));
+            if(iconM) iconM.classList.add('fa-spin');
             
             try {
                 const response = await fetch(`${SHEET_URL}&cb=${new Date().getTime()}`);
@@ -269,21 +233,15 @@
             } catch (e) {
                 console.error("Fetch error:", e);
             } finally {
-                setTimeout(() => {
-                    [iconD, iconM].forEach(i => i && i.classList.remove('fa-spin'));
-                }, 800);
+                if(iconM) setTimeout(() => iconM.classList.remove('fa-spin'), 800);
             }
         }
 
         function startAutoRefresh() {
             setInterval(() => {
                 secondsPassed++;
-                const bar = document.getElementById('refreshProgress');
-                bar.style.width = `${(secondsPassed / refreshInterval) * 100}%`;
-                
-                if (secondsPassed >= refreshInterval) {
-                    fetchData();
-                }
+                document.getElementById('refreshProgress').style.width = `${(secondsPassed / refreshInterval) * 100}%`;
+                if (secondsPassed >= refreshInterval) fetchData();
             }, 1000);
         }
 
@@ -299,36 +257,28 @@
 
         function switchView(view) {
             currentView = view;
-            
-            // Sync Desktop buttons
             const btnMonthD = document.getElementById('btnMonthD');
             const btnYearD = document.getElementById('btnYearD');
-            // Sync Mobile buttons
             const btnMonthM = document.getElementById('btnMonthM');
             const btnYearM = document.getElementById('btnYearM');
-
             const monthSelectors = [document.getElementById('monthSelector'), document.getElementById('monthSelectorM')];
 
             if(view === 'month') {
                 [btnMonthD, btnMonthM].forEach(b => b.className = "px-5 py-2 flex-1 rounded-xl text-xs font-bold transition-all bg-white shadow-sm text-blue-600");
                 [btnYearD, btnYearM].forEach(b => b.className = "px-5 py-2 flex-1 rounded-xl text-xs font-bold transition-all text-slate-500 hover:bg-white/50");
-                monthSelectors.forEach(s => s.parentElement.classList.remove('hidden'));
+                monthSelectors.forEach(s => s.classList.remove('hidden'));
             } else {
                 [btnYearD, btnYearM].forEach(b => b.className = "px-5 py-2 flex-1 rounded-xl text-xs font-bold transition-all bg-white shadow-sm text-blue-600");
                 [btnMonthD, btnMonthM].forEach(b => b.className = "px-5 py-2 flex-1 rounded-xl text-xs font-bold transition-all text-slate-500 hover:bg-white/50");
-                monthSelectors.forEach(s => s.parentElement.classList.add('hidden'));
+                monthSelectors.forEach(s => s.classList.add('hidden'));
             }
             updateDashboard();
         }
 
         function updateDashboard() {
             const monthIdx = parseInt(document.getElementById('monthSelector').value);
-            const yearVal = document.getElementById('yearSelector').value;
             const labels = document.querySelectorAll('.view-label');
-            
-            labels.forEach(el => {
-                el.innerText = currentView === 'month' ? `${monthNames[monthIdx]} ${yearVal}` : `Tahun ${yearVal}`;
-            });
+            labels.forEach(el => el.innerText = currentView === 'month' ? monthNames[monthIdx] : 'Total 2026');
 
             let displayData = rawData.map(d => ({
                 name: d.name,
@@ -343,15 +293,14 @@
                 totalUnit += d.value;
                 let badge = "bg-slate-100 text-slate-400";
                 let crown = "";
-                
                 if(i===0 && d.value > 0) { badge = "rank-gold text-white"; crown = '<i class="fas fa-crown crown-icon ml-2"></i>'; }
                 else if(i===1 && d.value > 0) badge = "rank-silver text-white";
                 else if(i===2 && d.value > 0) badge = "rank-bronze text-white";
 
                 body.innerHTML += `
-                    <tr class="hover:bg-slate-50 transition-colors group">
+                    <tr class="hover:bg-slate-50 transition-colors">
                         <td class="px-8 py-5 w-20">
-                            <span class="w-8 h-8 flex items-center justify-center rounded-xl text-[10px] font-black tracking-tighter ${badge}">${i+1}</span>
+                            <span class="w-8 h-8 flex items-center justify-center rounded-xl text-[10px] font-black ${badge}">${i+1}</span>
                         </td>
                         <td class="py-5 font-bold text-slate-700">
                             <div class="flex items-center">${d.name} ${crown}</div>
@@ -394,8 +343,8 @@
                     maintainAspectRatio: false,
                     plugins: { legend: { display: false } },
                     scales: { 
-                        y: { grid: { display: false }, border: { display: false }, ticks: { font: { weight: '600', size: 11 } } },
-                        x: { beginAtZero: true, grid: { color: '#f1f5f9' }, border: { display: false } }
+                        y: { grid: { display: false }, ticks: { font: { weight: '600', size: 11 } } },
+                        x: { beginAtZero: true, grid: { color: '#f1f5f9' } }
                     }
                 }
             });
