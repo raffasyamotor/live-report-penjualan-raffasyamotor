@@ -8,18 +8,27 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
-        body { font-family: 'Inter', sans-serif; background-color: #f1f5f9; }
-        .glass { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); }
-        .rank-gold { background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); }
-        .rank-silver { background: linear-gradient(135deg, #94a3b8 0%, #64748b 100%); }
-        .rank-bronze { background: linear-gradient(135deg, #d97706 0%, #92400e 100%); }
-        .card-shadow { box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05); }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;900&display=swap');
         
-        /* Animasi progress bar untuk indikator refresh */
+        :root {
+            --primary: #3b82f6;
+            --accent: #f59e0b;
+        }
+
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: #f8fafc; 
+            color: #1e293b;
+        }
+
+        .glass { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); }
+        .rank-gold { background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); }
+        .rank-silver { background: linear-gradient(135deg, #cbd5e1 0%, #94a3b8 100%); }
+        .rank-bronze { background: linear-gradient(135deg, #d97706 0%, #92400e 100%); }
+        
         .refresh-progress {
-            height: 3px;
-            background: #3b82f6;
+            height: 4px;
+            background: var(--primary);
             width: 0%;
             transition: width 1s linear;
             position: fixed;
@@ -29,107 +38,166 @@
         }
 
         .crown-icon {
-            color: #fbbf24;
-            filter: drop-shadow(0 0 2px rgba(245, 158, 11, 0.5));
+            color: var(--accent);
+            filter: drop-shadow(0 0 3px rgba(245, 158, 11, 0.4));
             animation: bounce 2s infinite;
         }
 
         @keyframes bounce {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-3px); }
+            0%, 100% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(-4px) scale(1.1); }
+        }
+
+        /* Responsive Table adjustments */
+        @media (max-width: 640px) {
+            .table-container { max-height: 400px; }
+            .stat-card-title { font-size: 0.7rem; }
+            .stat-card-value { font-size: 1.5rem; }
         }
     </style>
 </head>
-<body class="p-4 md:p-8">
-    <!-- Indikator Auto-Refresh -->
+<body class="antialiased">
+    <!-- Progress Bar -->
     <div id="refreshProgress" class="refresh-progress"></div>
 
-    <div class="max-w-7xl mx-auto">
-        <!-- Header -->
-        <header class="mb-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-            <div class="text-left">
-                <div class="inline-block p-2 px-4 rounded-full bg-blue-100 text-blue-700 text-[10px] font-bold uppercase tracking-widest mb-3">
-                    Real-time Auto-Sync System
-                </div>
-                <h1 class="text-3xl md:text-4xl font-black text-slate-900 tracking-tight">🏆 Dashboard Penjualan</h1>
-                <p class="text-slate-500 text-sm mt-1">Data diperbarui otomatis setiap 30 detik.</p>
-            </div>
-            
-            <div class="flex flex-wrap items-center gap-3">
-                <!-- Status Sinkronisasi -->
-                <div id="syncStatus" class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mr-2 flex items-center">
-                    <span class="relative flex h-2 w-2 mr-2">
-                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                        <span class="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
-                    </span>
-                    Tersinkronisasi
+    <div class="min-h-screen pb-12">
+        <!-- Top Navigation / Header -->
+        <nav class="sticky top-0 z-40 w-full bg-white/80 backdrop-blur-md border-b border-slate-200 mb-6 md:mb-10">
+            <div class="max-w-7xl mx-auto px-4 h-16 md:h-20 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="bg-blue-600 p-2 rounded-xl text-white">
+                        <i class="fas fa-trophy text-lg"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-lg md:text-xl font-black tracking-tight leading-tight">Sales Leader</h1>
+                        <p class="hidden md:block text-[10px] text-slate-500 font-medium uppercase tracking-tighter">Performance Monitoring</p>
+                    </div>
                 </div>
 
-                <!-- Month Selector -->
-                <div id="monthSelectorContainer" class="hidden">
-                    <select id="monthSelector" onchange="updateDashboard()" class="bg-white border border-slate-200 text-slate-700 text-sm font-bold rounded-xl focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 shadow-sm">
-                        <!-- Options filled by JS -->
+                <!-- Desktop Controls -->
+                <div class="hidden md:flex items-center gap-4">
+                    <div class="flex items-center gap-2 bg-slate-100 p-1 rounded-2xl border border-slate-200">
+                        <button id="btnMonthD" onclick="switchView('month')" class="px-5 py-2 rounded-xl text-xs font-bold transition-all bg-white shadow-sm text-blue-600">Bulanan</button>
+                        <button id="btnYearD" onclick="switchView('year')" class="px-5 py-2 rounded-xl text-xs font-bold transition-all text-slate-500 hover:bg-white/50">Tahunan</button>
+                    </div>
+                    
+                    <select id="yearSelector" onchange="updateDashboard()" class="bg-white border border-slate-200 text-slate-700 text-xs font-bold rounded-xl p-2.5 focus:ring-2 focus:ring-blue-500 outline-none">
+                        <!-- Filled by JS -->
+                    </select>
+
+                    <select id="monthSelector" onchange="updateDashboard()" class="bg-white border border-slate-200 text-slate-700 text-xs font-bold rounded-xl p-2.5 focus:ring-2 focus:ring-blue-500 outline-none">
+                        <!-- Filled by JS -->
                     </select>
                 </div>
 
-                <!-- Tab Filters -->
-                <div class="flex space-x-1 bg-white p-1 rounded-2xl shadow-sm border border-slate-200">
-                    <button id="btnMonth" onclick="switchView('month')" class="px-6 py-2 rounded-xl text-sm font-bold transition-all bg-blue-600 text-white shadow-md">Bulanan</button>
-                    <button id="btnYear" onclick="switchView('year')" class="px-6 py-2 rounded-xl text-sm font-bold text-slate-500 hover:bg-slate-50 transition-all">Tahunan</button>
-                </div>
+                <!-- Mobile Controls Trigger (Refresh only for simple UI) -->
+                <button onclick="fetchData()" class="md:hidden text-slate-400 p-2">
+                    <i class="fas fa-sync-alt" id="refreshIconMobile"></i>
+                </button>
             </div>
-        </header>
+        </nav>
 
-        <!-- Stats Overview -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
-            <div class="glass p-6 rounded-3xl card-shadow border border-white">
-                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Total Unit (<span class="view-label">...</span>)</p>
-                <h3 id="statTotal" class="text-3xl font-black text-slate-800">0</h3>
-            </div>
-            <div class="glass p-6 rounded-3xl card-shadow border border-white">
-                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Top Sales</p>
-                <h3 id="statTop" class="text-2xl font-black text-blue-600 truncate flex items-center gap-2">-</h3>
-            </div>
-            <div class="glass p-6 rounded-3xl card-shadow border border-white">
-                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Pencapaian Tertinggi</p>
-                <h3 id="statHighest" class="text-3xl font-black text-slate-800">0</h3>
-            </div>
-            <div class="glass p-6 rounded-3xl card-shadow border border-white">
-                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Rata-rata</p>
-                <h3 id="statAvg" class="text-3xl font-black text-slate-800">0</h3>
-            </div>
-        </div>
-
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <!-- Ranking Table -->
-            <div class="lg:col-span-1 bg-white rounded-3xl shadow-xl border border-slate-200 overflow-hidden">
-                <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/30">
-                    <h2 class="text-sm font-black text-slate-800 uppercase tracking-widest">Peringkat <span class="view-label">...</span></h2>
-                    <button onclick="fetchData()" class="text-slate-400 hover:text-blue-600 transition-colors">
-                        <i class="fas fa-sync-alt" id="refreshIcon"></i>
-                    </button>
+        <main class="max-w-7xl mx-auto px-4">
+            <!-- Mobile Selectors (Visible only on small screens) -->
+            <div class="md:hidden flex flex-col gap-3 mb-6">
+                <div class="grid grid-cols-2 gap-2">
+                    <select id="yearSelectorM" onchange="syncSelectors(this, 'yearSelector')" class="bg-white border border-slate-200 text-slate-700 text-sm font-bold rounded-2xl p-3 shadow-sm outline-none">
+                    </select>
+                    <select id="monthSelectorM" onchange="syncSelectors(this, 'monthSelector')" class="bg-white border border-slate-200 text-slate-700 text-sm font-bold rounded-2xl p-3 shadow-sm outline-none">
+                    </select>
                 </div>
-                <div class="overflow-y-auto max-h-[600px]">
-                    <table class="w-full text-left">
-                        <tbody id="leaderboardBody" class="divide-y divide-slate-50 text-sm">
-                            <!-- Data -->
-                        </tbody>
-                    </table>
+                <div class="flex bg-slate-200/50 p-1 rounded-2xl">
+                    <button id="btnMonthM" onclick="switchView('month')" class="flex-1 py-2.5 rounded-xl text-sm font-bold transition-all bg-white shadow-sm text-blue-600">Bulanan</button>
+                    <button id="btnYearM" onclick="switchView('year')" class="flex-1 py-2.5 rounded-xl text-sm font-bold transition-all text-slate-500">Tahunan</button>
                 </div>
             </div>
 
-            <!-- Chart Section -->
-            <div class="lg:col-span-2 space-y-6">
-                <div class="bg-white p-8 rounded-3xl shadow-xl border border-slate-200">
-                    <h2 class="text-sm font-black text-slate-800 uppercase tracking-widest mb-8 flex items-center">
-                        <i class="fas fa-chart-bar mr-2 text-blue-500"></i> Visualisasi Performa
-                    </h2>
-                    <div class="relative h-[450px]">
-                        <canvas id="mainChart"></canvas>
+            <!-- Stats Overview - Grid Responsif -->
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-8 md:mb-12">
+                <!-- Total Unit -->
+                <div class="bg-white p-5 md:p-6 rounded-[2rem] border border-slate-200 shadow-sm">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center text-blue-500">
+                            <i class="fas fa-shopping-cart text-xs"></i>
+                        </div>
+                        <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest stat-card-title">Total Unit</span>
+                    </div>
+                    <h3 id="statTotal" class="text-2xl md:text-3xl font-black text-slate-800 stat-card-value">0</h3>
+                    <p class="text-[10px] text-slate-400 mt-1 font-medium"><span class="view-label">...</span></p>
+                </div>
+
+                <!-- Top Sales -->
+                <div class="bg-white p-5 md:p-6 rounded-[2rem] border border-slate-200 shadow-sm">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-8 h-8 rounded-full bg-amber-50 flex items-center justify-center text-amber-500">
+                            <i class="fas fa-crown text-xs"></i>
+                        </div>
+                        <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest stat-card-title">Top Sales</span>
+                    </div>
+                    <h3 id="statTop" class="text-lg md:text-xl font-black text-blue-600 truncate flex items-center gap-2">-</h3>
+                    <p class="text-[10px] text-slate-400 mt-1 font-medium italic">Highest Rank</p>
+                </div>
+
+                <!-- Pencapaian Tertinggi -->
+                <div class="bg-white p-5 md:p-6 rounded-[2rem] border border-slate-200 shadow-sm">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-8 h-8 rounded-full bg-green-50 flex items-center justify-center text-green-500">
+                            <i class="fas fa-chart-line text-xs"></i>
+                        </div>
+                        <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest stat-card-title">High Score</span>
+                    </div>
+                    <h3 id="statHighest" class="text-2xl md:text-3xl font-black text-slate-800 stat-card-value">0</h3>
+                    <p class="text-[10px] text-slate-400 mt-1 font-medium">Record Performance</p>
+                </div>
+
+                <!-- Rata-rata -->
+                <div class="bg-white p-5 md:p-6 rounded-[2rem] border border-slate-200 shadow-sm">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-8 h-8 rounded-full bg-purple-50 flex items-center justify-center text-purple-500">
+                            <i class="fas fa-users text-xs"></i>
+                        </div>
+                        <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest stat-card-title">Average</span>
+                    </div>
+                    <h3 id="statAvg" class="text-2xl md:text-3xl font-black text-slate-800 stat-card-value">0</h3>
+                    <p class="text-[10px] text-slate-400 mt-1 font-medium">Per Person</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                <!-- Left: Leaderboard (Desktop: 5 cols, Mobile: full) -->
+                <div class="lg:col-span-5 bg-white rounded-[2.5rem] shadow-xl shadow-slate-200/50 border border-slate-200 overflow-hidden">
+                    <div class="px-8 py-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+                        <h2 class="text-xs font-black text-slate-800 uppercase tracking-[0.2em]">Peringkat <span class="view-label">...</span></h2>
+                        <span id="syncIndicator" class="text-[10px] font-bold text-green-500 flex items-center gap-1.5">
+                            <span class="w-1.5 h-1.5 rounded-full bg-green-500"></span> Live
+                        </span>
+                    </div>
+                    <div class="overflow-y-auto max-h-[500px] md:max-h-[600px] table-container">
+                        <table class="w-full text-left">
+                            <tbody id="leaderboardBody" class="divide-y divide-slate-50 text-sm">
+                                <!-- Data -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Right: Chart (Desktop: 7 cols, Mobile: full) -->
+                <div class="lg:col-span-7 space-y-6">
+                    <div class="bg-white p-6 md:p-10 rounded-[2.5rem] shadow-xl shadow-slate-200/50 border border-slate-200">
+                        <div class="flex items-center justify-between mb-8">
+                            <h2 class="text-xs font-black text-slate-800 uppercase tracking-[0.2em]">Visual Performa</h2>
+                            <div class="flex gap-1">
+                                <span class="w-2 h-2 rounded-full bg-blue-500"></span>
+                                <span class="w-2 h-2 rounded-full bg-slate-200"></span>
+                            </div>
+                        </div>
+                        <div class="relative h-[300px] md:h-[450px]">
+                            <canvas id="mainChart"></canvas>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
+        </main>
     </div>
 
     <script>
@@ -140,55 +208,78 @@
         let currentView = 'month';
         let rawData = [];
         let mainChart = null;
-        let refreshInterval = 30; // Detik
+        let refreshInterval = 30;
         let secondsPassed = 0;
 
-        // Initialize month dropdown
-        function setupMonthSelector() {
-            const selector = document.getElementById('monthSelector');
-            if (selector.options.length > 0) return; // Hindari duplikasi saat auto-refresh
-
+        // Auto-detect current year and setup selectors for both Desktop & Mobile
+        function setupSelectors() {
             const now = new Date();
+            const currentYear = now.getFullYear();
             const currentMonthIdx = now.getMonth();
 
-            monthNames.forEach((name, index) => {
-                const option = document.createElement('option');
-                option.value = index;
-                option.text = name;
-                if (index === currentMonthIdx) option.selected = true;
-                selector.appendChild(option);
+            const yearSelectors = [document.getElementById('yearSelector'), document.getElementById('yearSelectorM')];
+            const monthSelectors = [document.getElementById('monthSelector'), document.getElementById('monthSelectorM')];
+            
+            yearSelectors.forEach(sel => {
+                if (!sel || sel.options.length > 0) return;
+                [currentYear - 1, currentYear, currentYear + 1].forEach(year => {
+                    const option = document.createElement('option');
+                    option.value = year;
+                    option.text = year;
+                    if (year === currentYear) option.selected = true;
+                    sel.appendChild(option);
+                });
+            });
+
+            monthSelectors.forEach(sel => {
+                if (!sel || sel.options.length > 0) return;
+                monthNames.forEach((name, index) => {
+                    const option = document.createElement('option');
+                    option.value = index;
+                    option.text = name;
+                    if (index === currentMonthIdx) option.selected = true;
+                    sel.appendChild(option);
+                });
             });
         }
 
+        // Helper to keep mobile and desktop selectors in sync
+        function syncSelectors(source, targetId) {
+            document.getElementById(targetId).value = source.value;
+            updateDashboard();
+        }
+
         async function init() {
-            setupMonthSelector();
+            setupSelectors();
             await fetchData();
             startAutoRefresh();
         }
 
         async function fetchData() {
-            const icon = document.getElementById('refreshIcon');
-            if (icon) icon.classList.add('fa-spin');
+            const iconD = document.getElementById('refreshIcon');
+            const iconM = document.getElementById('refreshIconMobile');
+            [iconD, iconM].forEach(i => i && i.classList.add('fa-spin'));
             
             try {
-                // Tambahkan parameter cache-buster agar data benar-benar baru
                 const response = await fetch(`${SHEET_URL}&cb=${new Date().getTime()}`);
                 const csv = await response.text();
                 rawData = parseCSV(csv);
                 updateDashboard();
-                secondsPassed = 0; // Reset timer setelah berhasil fetch
-                updateProgressBar();
+                secondsPassed = 0;
             } catch (e) {
                 console.error("Fetch error:", e);
             } finally {
-                if (icon) setTimeout(() => icon.classList.remove('fa-spin'), 800);
+                setTimeout(() => {
+                    [iconD, iconM].forEach(i => i && i.classList.remove('fa-spin'));
+                }, 800);
             }
         }
 
         function startAutoRefresh() {
             setInterval(() => {
                 secondsPassed++;
-                updateProgressBar();
+                const bar = document.getElementById('refreshProgress');
+                bar.style.width = `${(secondsPassed / refreshInterval) * 100}%`;
                 
                 if (secondsPassed >= refreshInterval) {
                     fetchData();
@@ -196,59 +287,53 @@
             }, 1000);
         }
 
-        function updateProgressBar() {
-            const bar = document.getElementById('refreshProgress');
-            const percentage = (secondsPassed / refreshInterval) * 100;
-            bar.style.width = `${percentage}%`;
-        }
-
         function parseCSV(csv) {
             const lines = csv.split('\n');
             return lines.slice(1).filter(l => l.trim()).map(line => {
                 const cols = line.split(/,(?=(?:[^"]*"[^"]*")*[^"]*$)/).map(c => c.replace(/"/g, '').trim());
-                
                 const monthlyData = cols.slice(1, 13).map(v => parseFloat(v.replace(/[^0-9.-]+/g, "")) || 0);
                 const totalYearly = parseFloat(cols[13]?.replace(/[^0-9.-]+/g, "") || 0);
-
-                return { 
-                    name: cols[0], 
-                    monthly: monthlyData,
-                    total: totalYearly
-                };
+                return { name: cols[0], monthly: monthlyData, total: totalYearly };
             }).filter(d => d.name && d.name.toLowerCase() !== 'nama');
         }
 
         function switchView(view) {
             currentView = view;
-            const btnMonth = document.getElementById('btnMonth');
-            const btnYear = document.getElementById('btnYear');
-            const monthContainer = document.getElementById('monthSelectorContainer');
             
+            // Sync Desktop buttons
+            const btnMonthD = document.getElementById('btnMonthD');
+            const btnYearD = document.getElementById('btnYearD');
+            // Sync Mobile buttons
+            const btnMonthM = document.getElementById('btnMonthM');
+            const btnYearM = document.getElementById('btnYearM');
+
+            const monthSelectors = [document.getElementById('monthSelector'), document.getElementById('monthSelectorM')];
+
             if(view === 'month') {
-                btnMonth.className = "px-6 py-2 rounded-xl text-sm font-bold bg-blue-600 text-white shadow-md";
-                btnYear.className = "px-6 py-2 rounded-xl text-sm font-bold text-slate-500 hover:bg-slate-50";
-                monthContainer.classList.remove('hidden');
+                [btnMonthD, btnMonthM].forEach(b => b.className = "px-5 py-2 flex-1 rounded-xl text-xs font-bold transition-all bg-white shadow-sm text-blue-600");
+                [btnYearD, btnYearM].forEach(b => b.className = "px-5 py-2 flex-1 rounded-xl text-xs font-bold transition-all text-slate-500 hover:bg-white/50");
+                monthSelectors.forEach(s => s.parentElement.classList.remove('hidden'));
             } else {
-                btnYear.className = "px-6 py-2 rounded-xl text-sm font-bold bg-blue-600 text-white shadow-md";
-                btnMonth.className = "px-6 py-2 rounded-xl text-sm font-bold text-slate-500 hover:bg-slate-50";
-                monthContainer.classList.add('hidden');
+                [btnYearD, btnYearM].forEach(b => b.className = "px-5 py-2 flex-1 rounded-xl text-xs font-bold transition-all bg-white shadow-sm text-blue-600");
+                [btnMonthD, btnMonthM].forEach(b => b.className = "px-5 py-2 flex-1 rounded-xl text-xs font-bold transition-all text-slate-500 hover:bg-white/50");
+                monthSelectors.forEach(s => s.parentElement.classList.add('hidden'));
             }
             updateDashboard();
         }
 
         function updateDashboard() {
-            const monthSelector = document.getElementById('monthSelector');
-            const selectedMonthIdx = parseInt(monthSelector.value);
+            const monthIdx = parseInt(document.getElementById('monthSelector').value);
+            const yearVal = document.getElementById('yearSelector').value;
             const labels = document.querySelectorAll('.view-label');
             
-            labels.forEach(el => el.innerText = currentView === 'month' ? monthNames[selectedMonthIdx] : 'Total 2024');
+            labels.forEach(el => {
+                el.innerText = currentView === 'month' ? `${monthNames[monthIdx]} ${yearVal}` : `Tahun ${yearVal}`;
+            });
 
             let displayData = rawData.map(d => ({
                 name: d.name,
-                value: currentView === 'month' ? d.monthly[selectedMonthIdx] : d.total
-            }));
-            
-            displayData.sort((a,b) => b.value - a.value);
+                value: currentView === 'month' ? d.monthly[monthIdx] : d.total
+            })).sort((a,b) => b.value - a.value);
 
             const body = document.getElementById('leaderboardBody');
             body.innerHTML = '';
@@ -256,41 +341,31 @@
 
             displayData.forEach((d, i) => {
                 totalUnit += d.value;
-                let badge = "bg-slate-100 text-slate-500";
+                let badge = "bg-slate-100 text-slate-400";
                 let crown = "";
                 
-                if(i===0 && d.value > 0) {
-                    badge = "rank-gold text-white shadow-sm";
-                    crown = '<i class="fas fa-crown crown-icon ml-2"></i>';
-                }
-                else if(i===1 && d.value > 0) badge = "rank-silver text-white shadow-sm";
-                else if(i===2 && d.value > 0) badge = "rank-bronze text-white shadow-sm";
+                if(i===0 && d.value > 0) { badge = "rank-gold text-white"; crown = '<i class="fas fa-crown crown-icon ml-2"></i>'; }
+                else if(i===1 && d.value > 0) badge = "rank-silver text-white";
+                else if(i===2 && d.value > 0) badge = "rank-bronze text-white";
 
                 body.innerHTML += `
-                    <tr class="hover:bg-slate-50 transition-colors border-b border-slate-50 last:border-0">
-                        <td class="px-6 py-4 w-16">
-                            <span class="w-7 h-7 flex items-center justify-center rounded-lg text-[10px] font-black ${badge}">${i+1}</span>
+                    <tr class="hover:bg-slate-50 transition-colors group">
+                        <td class="px-8 py-5 w-20">
+                            <span class="w-8 h-8 flex items-center justify-center rounded-xl text-[10px] font-black tracking-tighter ${badge}">${i+1}</span>
                         </td>
-                        <td class="py-4 font-bold text-slate-700 flex items-center">
-                            ${d.name} ${crown}
+                        <td class="py-5 font-bold text-slate-700">
+                            <div class="flex items-center">${d.name} ${crown}</div>
                         </td>
-                        <td class="px-6 py-4 text-right font-mono font-black text-slate-900">${d.value.toLocaleString()}</td>
+                        <td class="px-8 py-5 text-right font-mono font-black text-slate-900 text-base">${d.value.toLocaleString()}</td>
                     </tr>
                 `;
             });
 
-            // Update Stats dengan Mahkota
-            const topSalesName = displayData[0]?.value > 0 ? displayData[0].name : "-";
-            const topSalesContainer = document.getElementById('statTop');
-            if (displayData[0]?.value > 0) {
-                topSalesContainer.innerHTML = `${topSalesName} <i class="fas fa-crown crown-icon text-xl"></i>`;
-            } else {
-                topSalesContainer.innerText = "-";
-            }
-
             document.getElementById('statTotal').innerText = totalUnit.toLocaleString();
+            document.getElementById('statTop').innerHTML = displayData[0]?.value > 0 
+                ? `<span class="truncate max-w-[120px]">${displayData[0].name}</span> <i class="fas fa-crown crown-icon text-sm"></i>` 
+                : "-";
             document.getElementById('statHighest').innerText = (displayData[0]?.value || 0).toLocaleString();
-            
             const activeSales = displayData.filter(x => x.value > 0).length || 1;
             document.getElementById('statAvg').innerText = (totalUnit / activeSales).toFixed(1);
 
@@ -300,44 +375,33 @@
         function renderChart(data) {
             const ctx = document.getElementById('mainChart').getContext('2d');
             if(mainChart) mainChart.destroy();
-            
-            const chartData = data.filter(d => d.value > 0).slice(0, 15);
+            const chartData = data.filter(d => d.value > 0).slice(0, 10);
             
             mainChart = new Chart(ctx, {
                 type: 'bar',
                 data: {
                     labels: chartData.map(d => d.name),
                     datasets: [{
-                        label: 'Unit',
                         data: chartData.map(d => d.value),
-                        backgroundColor: chartData.map((_, i) => i === 0 ? '#f59e0b' : '#3b82f6'),
-                        borderRadius: 8,
-                        barThickness: 'flex',
-                        maxBarThickness: 35
+                        backgroundColor: (c) => c.index === 0 ? '#f59e0b' : '#3b82f6',
+                        borderRadius: 12,
+                        barThickness: window.innerWidth < 768 ? 15 : 25
                     }]
                 },
                 options: {
                     indexAxis: 'y',
                     responsive: true,
                     maintainAspectRatio: false,
-                    animation: {
-                        duration: 500 // Animasi lebih cepat agar terasa responsif saat auto-update
-                    },
-                    plugins: { 
-                        legend: { display: false },
-                        tooltip: { backgroundColor: '#1e293b', padding: 12 }
-                    },
+                    plugins: { legend: { display: false } },
                     scales: { 
-                        y: { grid: { display: false }, ticks: { font: { weight: 'bold' } } },
-                        x: { beginAtZero: true, grid: { color: '#f1f5f9' } }
+                        y: { grid: { display: false }, border: { display: false }, ticks: { font: { weight: '600', size: 11 } } },
+                        x: { beginAtZero: true, grid: { color: '#f1f5f9' }, border: { display: false } }
                     }
                 }
             });
         }
 
-        window.onload = () => {
-            init().then(() => switchView('month'));
-        };
+        window.onload = init;
     </script>
 </body>
 </html>
